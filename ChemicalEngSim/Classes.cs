@@ -142,7 +142,7 @@ namespace ChemicalEngSim
     {
         public double t = 0;
         public List<double> Time = new List<double>();
-        public void TimeSteps(dynamic[] obj, dynamic[] nonSim, bool sim1, bool sim2, dynamic[] objects)
+        public void TimeSteps(dynamic[] obj, dynamic[] nonSim, bool sim1, bool sim2, dynamic[] objects, dynamic reactorRef)
         {
             
             for (int i = 0; i < (obj.Length); i++)
@@ -157,6 +157,11 @@ namespace ChemicalEngSim
                         {
                             objects[j].Value.VolumeFilledValues.Add(objects[j].Value.VolumeFilled);
                         }
+                        reactorRef.Value.CalculateChemicalConcentrations(t);
+                        reactorRef.Value.HClConcentrationValues.Add(reactorRef.Value.HClConcentration);
+                        reactorRef.Value.NaOHConcentrationValues.Add(reactorRef.Value.NaOHConcentration);
+                        reactorRef.Value.H2OConcentrationValues.Add(reactorRef.Value.H2OConcentration);
+                        reactorRef.Value.NaClConcentrationValues.Add(reactorRef.Value.NaClConcentration);
                         Time.Add(t);
                         t += 1;
                     }
@@ -172,6 +177,11 @@ namespace ChemicalEngSim
                             nonSim[k].Value.VolumeFilledValues.Add(nonSim[k].Value.VolumeFilled);
                             //non-sim obj
                         }
+                        reactorRef.Value.CalculateChemicalConcentrations(t);
+                        reactorRef.Value.HClConcentrationValues.Add(reactorRef.Value.HClConcentration);
+                        reactorRef.Value.NaOHConcentrationValues.Add(reactorRef.Value.NaOHConcentration);
+                        reactorRef.Value.H2OConcentrationValues.Add(reactorRef.Value.H2OConcentration);
+                        reactorRef.Value.NaClConcentrationValues.Add(reactorRef.Value.NaClConcentration);
                         Time.Add(t);
                         t += 1;
                     }
@@ -282,14 +292,25 @@ namespace ChemicalEngSim
         public double Volume;
         public List<double> VolumeFilledValues = new List<double>();
         public static readonly double FluidDensity = 998;
+        public double InitialNaOHConcentration;
+        public double InitialHClConcentration;
+        public double NaOHConcentration;
+        public double HClConcentration;
+        public double H2OConcentration;
+        public double NaClConcentration;
+        public List<double> NaOHConcentrationValues = new List<double>();
+        public List<double> HClConcentrationValues = new List<double>();
+        public List<double> H2OConcentrationValues = new List<double>();
+        public List<double> NaClConcentrationValues = new List<double>();
 
-        public Reactor(double volume)
+        public Reactor(double volume, double initialProductConcentration)
         {
             Volume = volume;
             VolumeFilled = 0;
+            InitialNaOHConcentration = initialProductConcentration;
+            InitialHClConcentration = initialProductConcentration;
 
         }
-
 
         //tex: Assumptions:
 
@@ -321,11 +342,11 @@ namespace ChemicalEngSim
 
         //tex:$[D_0] + dtr_{net} = [D]$
 
-        public double[] CalculateChemicalConcentrations(double t, double initialA, double initialB, double kR)
+        public void CalculateChemicalConcentrations(double t, double kR = 0.000000000281)
         {
-            double R = kR * initialA * initialB;
-            double ConcA = initialA - (t*R);
-            double ConcB = initialB - (t * R);
+            double R = kR * InitialNaOHConcentration * InitialHClConcentration;
+            double ConcA = InitialHClConcentration - (t * R);
+            double ConcB = InitialNaOHConcentration - (t * R);
             double ConcC = t * R;
             double ConcD = t * R;
             if (ConcA < 0)
@@ -336,18 +357,21 @@ namespace ChemicalEngSim
             { 
                 ConcB = 0;
             }
-            if (ConcC > initialA)
+            if (ConcC > InitialHClConcentration)
             {
-                ConcC = initialA;
+                ConcC = InitialHClConcentration;
             }
-            if (ConcD > initialB) { 
-                ConcD = initialB;
+            if (ConcD > InitialNaOHConcentration) { 
+                ConcD = InitialNaOHConcentration;
             }
 
-            double[] Concentrations = { ConcA, ConcB, ConcC, ConcD };
+            HClConcentration = ConcA;
+            NaOHConcentration = ConcB;
+            H2OConcentration = ConcC;
+            NaClConcentration = ConcD;
 
 
-            return Concentrations;
+        
         }
     }
 
