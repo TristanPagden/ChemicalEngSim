@@ -299,6 +299,10 @@ namespace ChemicalEngSim
 
         //tex:Using CSTR so concentration within reactor is same as at outlet
 
+        //tex: $r_r = 0$
+
+        //tex: All rates of reaction are done at $298K$
+
         //tex:For reaction: $aA + bB \rightleftharpoons cC + dD$
 
         //tex:$k_r = k_0e^{\frac{-Ea}{RT}}$
@@ -317,9 +321,33 @@ namespace ChemicalEngSim
 
         //tex:$[D_0] + dtr_{net} = [D]$
 
-        public double CalculateChemicalConcentrations()
+        public double[] CalculateChemicalConcentrations(double t, double initialA, double initialB, double kR)
         {
-            return 0;
+            double R = kR * initialA * initialB;
+            double ConcA = initialA - (t*R);
+            double ConcB = initialB - (t * R);
+            double ConcC = t * R;
+            double ConcD = t * R;
+            if (ConcA < 0)
+            {
+                ConcA = 0;
+            }
+            if (ConcB < 0) 
+            { 
+                ConcB = 0;
+            }
+            if (ConcC > initialA)
+            {
+                ConcC = initialA;
+            }
+            if (ConcD > initialB) { 
+                ConcD = initialB;
+            }
+
+            double[] Concentrations = { ConcA, ConcB, ConcC, ConcD };
+
+
+            return Concentrations;
         }
     }
 
